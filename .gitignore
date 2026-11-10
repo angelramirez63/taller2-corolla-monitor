@@ -1,0 +1,22 @@
+# Entorno virtual
+.venv/
+
+# Variables de entorno (contiene contraseñas)
+.env
+
+# CSVs generados por el scraper
+datos/*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# VS Code
+.vscode/
+
+# Playwright
+playwright-report/
+test-results/
