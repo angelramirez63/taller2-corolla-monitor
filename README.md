@@ -8,6 +8,39 @@ Pipeline en Python que cada día consulta los anuncios de **Toyota Corolla 2022�
 
 ## Estructura del repositorio
 
+```
+taller2-corolla-monitor/
+├── README.md
+├── requirements.txt
+├── .env.example               # plantilla de credenciales (el .env real no se versiona)
+├── .gitignore
+├── config/                    # configuración no sensible
+├── src/
+│   └── corolla_monitor/
+│       ├── recoleccion/       # Paso 1: enlaces y datos diarios
+│       ├── base_datos/        # Paso 2: base consolidada
+│       ├── actualizacion/     # Paso 3: funciones de actualización
+│       ├── automatizacion/    # Paso 4: ejecución diaria 8:00 / 11:00
+│       ├── logs/              # Paso 5: logs del workflow
+│       ├── analisis/          # Paso 6: precios y gangas
+│       └── correo/            # Paso 7: plantilla y envío
+├── data/
+│   ├── diario/
+│   │   ├── enlaces/           # un archivo de enlaces por día
+│   │   └── datos/             # un archivo de datos por día
+│   ├── consolidada/           # base consolidada
+│   ├── logs/                  # logs por ejecución y consolidado
+│   └── pruebas/               # corridas de prueba (no se versionan)
+├── correos/
+│   ├── plantillas/            # plantilla del correo diario
+│   └── enviados/              # los 6 correos exportados
+├── docs/                      # enunciado, arquitectura, decisiones, incidentes
+├── tests/                     # pruebas con pytest
+└── entregable/                # paquete final para Bloque Neón (Paso 8)
+```
+
+### Detalle por carpeta
+
 | Ruta | Paso del taller | Peso | Contenido |
 |---|---|---|---|
 | `src/corolla_monitor/recoleccion/` | 1. Recolectar enlaces y datos | 20 % | Scraping de todas las páginas, archivos diarios de enlaces y datos |
