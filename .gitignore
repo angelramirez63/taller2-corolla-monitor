@@ -13,6 +13,13 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Archivos de prueba
+data/pruebas/*
+!data/pruebas/.gitkeep
+*.zip
 
 # VS Code
 .vscode/
