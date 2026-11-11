@@ -86,3 +86,28 @@ SELECT
 FROM observacion o
 JOIN anuncio a ON a.id = o.anuncio_id
 ORDER BY a.url, o.fecha;
+
+
+-- ─── Q6: Log consolidado del periodo ─────────────────────────────────────────
+-- Reconstruye qué ocurrió cada día en cada etapa del pipeline.
+SELECT
+    run_id,
+    etapa,
+    fecha_inicio AT TIME ZONE 'America/Bogota'   AS inicio_bog,
+    fecha_fin    AT TIME ZONE 'America/Bogota'   AS fin_bog,
+    duracion_seg,
+    estado,
+    enlaces_encontrados,
+    descargas_ok,
+    descargas_fallidas,
+    descargas_pendientes,
+    anuncios_nuevos,
+    registros_actualizados,
+    registros_sin_cambio,
+    no_encontrados,
+    anuncios_unicos_total,
+    tamanio_bd_mb,
+    correo_estado,
+    detalle_error
+FROM log_ejecucion
+ORDER BY run_id, etapa;

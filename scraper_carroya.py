@@ -15,6 +15,9 @@ import re
 import uuid
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+_BOGOTA = ZoneInfo("America/Bogota")
 
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
 
@@ -50,12 +53,12 @@ ESTADO_FALLIDO      = "fallido"
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 def now_str():
-    n = datetime.now()
+    n = datetime.now(_BOGOTA)
     return n.strftime("%Y-%m-%d"), n.strftime("%H:%M:%S")
 
 
 def csv_path(prefix: str) -> Path:
-    fecha = datetime.now().strftime("%Y-%m-%d")
+    fecha = datetime.now(_BOGOTA).strftime("%Y-%m-%d")
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     return OUTPUT_DIR / f"{prefix}_{fecha}.csv"
 
@@ -395,6 +398,26 @@ async def main():
     print(f"  → {datos_path.name}")
     print(f"{'='*60}\n")
 
+    return {
+        "enlaces_encontrados": total,
+        "descargas_ok":        desc,
+        "descargas_fallidas":  fallidos,
+        "descargas_pendientes": sin_int,
+    }
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    _logger = None
+    try:
+        from db.logger import RunLogger
+        _logger = RunLogger()
+    except Exception as _e:
+        print(f"[WARN] Logger no disponible, corriendo sin logging: {_e}")
+
+    if _logger:
+        with _logger.etapa("scraper") as _etapa:
+            _stats = asyncio.run(main())
+            _etapa.set(**_stats)
+        _logger.close()
+    else:
+        asyncio.run(main())

@@ -13,12 +13,19 @@ import argparse
 import csv
 import os
 import re
+import sys
 from datetime import datetime, date
 from pathlib import Path
+
+# Asegurar que el directorio raíz del proyecto esté en sys.path
+# para que 'from db.logger import ...' funcione al correr el script directamente
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
+
+from db.logger import RunLogger, db_size_mb
 
 # ── Configuración ──────────────────────────────────────────────────────────────
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -247,52 +254,76 @@ def main(fecha: str = None):
 
     insertados = fallidos = omitidos = no_enc = 0
 
-    with conn:
-        with conn.cursor() as cur:
-            for row in datos_rows:
-                url = _str(row.get("url"))
-                if not url:
-                    omitidos += 1
-                    continue
+    logger = RunLogger(conn=conn)
+    with logger.etapa("loader") as log:
+        with conn:
+            with conn.cursor() as cur:
+                for row in datos_rows:
+                    url = _str(row.get("url"))
+                    if not url:
+                        omitidos += 1
+                        continue
 
-                try:
-                    # 1. Vendedor
-                    vid = upsert_vendedor(
-                        cur,
-                        _str(row.get("vendedor_nombre")),
-                        _str(row.get("vendedor_departamento")),
-                    )
+                    try:
+                        # 1. Vendedor
+                        vid = upsert_vendedor(
+                            cur,
+                            _str(row.get("vendedor_nombre")),
+                            _str(row.get("vendedor_departamento")),
+                        )
 
-                    # 2. Anuncio
-                    aid = upsert_anuncio(
-                        cur, url,
-                        _str(row.get("marca")),
-                        _str(row.get("linea")),
-                        _int(row.get("año")),
-                        _str(row.get("ciudad")),
-                        vid,
-                        run_date,
-                    )
+                        # 2. Anuncio
+                        aid = upsert_anuncio(
+                            cur, url,
+                            _str(row.get("marca")),
+                            _str(row.get("linea")),
+                            _int(row.get("año")),
+                            _str(row.get("ciudad")),
+                            vid,
+                            run_date,
+                        )
 
-                    # 3. Observación
-                    upsert_observacion(cur, aid, row, run_date)
+                        # 3. Observación
+                        upsert_observacion(cur, aid, row, run_date)
 
-                    # 4. Cambios (solo si fue descargado hoy)
-                    if _str(row.get("estado")) == "descargado":
-                        insert_cambios(cur, aid, run_date, row)
+                        # 4. Cambios (solo si fue descargado hoy)
+                        if _str(row.get("estado")) == "descargado":
+                            insert_cambios(cur, aid, run_date, row)
 
-                    insertados += 1
+                        insertados += 1
 
-                except Exception as exc:
-                    conn.rollback()
-                    print(f"  ✗ Error en {url}: {exc}")
-                    fallidos += 1
-                    conn.autocommit = False
+                    except Exception as exc:
+                        conn.rollback()
+                        print(f"  ✗ Error en {url}: {exc}")
+                        fallidos += 1
+                        conn.autocommit = False
 
-            # 5. Marcar anuncios de días anteriores que no aparecieron hoy
-            #    Estado 'no_encontrado': búsqueda completa, anuncio ausente.
-            #    Distinto de 'fallido': aquí el anuncio ni siquiera estaba en los links.
-            no_enc = marcar_no_encontrados(cur, links_urls, run_date)
+                # 5. Marcar anuncios de días anteriores que no aparecieron hoy
+                no_enc = marcar_no_encontrados(cur, links_urls, run_date)
+
+                # 6. Métricas para el log
+                cur.execute(
+                    "SELECT COUNT(*) FROM anuncio WHERE primera_vista = %s", (run_date,)
+                )
+                anuncios_nuevos = cur.fetchone()[0]
+
+                cur.execute(
+                    "SELECT COUNT(DISTINCT anuncio_id) FROM cambio WHERE fecha = %s",
+                    (run_date,),
+                )
+                con_cambios = cur.fetchone()[0]
+
+                cur.execute("SELECT COUNT(*) FROM anuncio")
+                total_anuncios = cur.fetchone()[0]
+
+        log.set(
+            anuncios_nuevos        = anuncios_nuevos,
+            registros_actualizados = con_cambios,
+            registros_sin_cambio   = max(0, insertados - anuncios_nuevos - con_cambios),
+            no_encontrados         = no_enc,
+            anuncios_unicos_total  = total_anuncios,
+            tamanio_bd_mb          = db_size_mb(conn),
+        )
 
     conn.close()
 

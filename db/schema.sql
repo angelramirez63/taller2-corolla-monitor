@@ -95,3 +95,39 @@ CREATE TABLE IF NOT EXISTS cambio (
 
 CREATE INDEX IF NOT EXISTS idx_cambio_anuncio ON cambio(anuncio_id);
 CREATE INDEX IF NOT EXISTS idx_cambio_fecha   ON cambio(fecha DESC);
+
+-- ─── TABLA 5: log_ejecucion ───────────────────────────────────────────────────
+-- Un registro por etapa del pipeline por día de ejecución.
+-- run_id = fecha del día en Bogota (YYYY-MM-DD); agrupa todas las etapas del día.
+-- etapas: 'scraper', 'loader', 'analisis', 'correo'
+CREATE TABLE IF NOT EXISTS log_ejecucion (
+    id                      SERIAL          PRIMARY KEY,
+    run_id                  VARCHAR(50)     NOT NULL,       -- ej: '2026-11-16'
+    etapa                   VARCHAR(50)     NOT NULL,
+    fecha_inicio            TIMESTAMPTZ     NOT NULL,
+    fecha_fin               TIMESTAMPTZ,
+    duracion_seg            NUMERIC(10,2),
+    estado                  VARCHAR(20)     NOT NULL DEFAULT 'iniciado',
+    -- Métricas del scraper
+    enlaces_encontrados     INTEGER,
+    descargas_ok            INTEGER,
+    descargas_fallidas      INTEGER,
+    descargas_pendientes    INTEGER,
+    -- Métricas del loader
+    anuncios_nuevos         INTEGER,        -- primera vez que el sistema los ve
+    registros_actualizados  INTEGER,        -- anuncios con cambio de precio/km/version
+    registros_sin_cambio    INTEGER,
+    no_encontrados          INTEGER,
+    -- Estado general de la BD
+    anuncios_unicos_total   INTEGER,
+    tamanio_bd_mb           NUMERIC(10,2),
+    -- Correo (punto 7)
+    correo_estado           VARCHAR(50),
+    -- Texto libre
+    mensaje                 TEXT,
+    detalle_error           TEXT,
+    UNIQUE (run_id, etapa)   -- re-ejecutar el mismo día actualiza la fila, no duplica
+);
+
+CREATE INDEX IF NOT EXISTS idx_log_run_id ON log_ejecucion(run_id);
+CREATE INDEX IF NOT EXISTS idx_log_fecha  ON log_ejecucion(fecha_inicio DESC);
