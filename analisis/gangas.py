@@ -14,8 +14,11 @@ Método (resumen; el detalle está en README / documento de entrega):
   1. Distribución diaria: una observación por anuncio, solo 'descargado' ese día
      y con precio válido.
   2. Modelo hedónico: log(precio) ~ año + log(km) + versión + híbrido + blindado
-     + color blanco + sunroof, ajustado con regresión ridge sobre todos los
-     anuncios únicos vistos hasta la fecha (su observación válida más reciente).
+     + color blanco, ajustado con regresión ridge sobre todos los anuncios
+     únicos vistos hasta la fecha (su observación válida más reciente).
+     El sunroof se reporta pero no entra al modelo: viene de serie en el SEG
+     (ya lo captura la versión) y el scraper solo detecta si el vendedor lo
+     menciona, así que como variable mide la redacción del anuncio, no el carro.
   3. Referencia de cada anuncio: predicción leave-one-out (modelo entrenado sin
      ese anuncio), para que un precio atípico no se compare contra sí mismo.
   4. Posible ganga: precio ≥ 15 % por debajo de la referencia Y residuo
@@ -196,7 +199,7 @@ def preparar(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ── Modelo ────────────────────────────────────────────────────────────────────
-_FEATURES = ["año_c", "log_km_c", "XLI", "SEG", "GR-S", "hibrido", "blindado", "blanco", "sunroof"]
+_FEATURES = ["año_c", "log_km_c", "XLI", "SEG", "GR-S", "hibrido", "blindado", "blanco"]
 
 
 def _motivo_no_modelable(r) -> str | None:
@@ -224,7 +227,6 @@ def matriz(df: pd.DataFrame, km_media: float) -> np.ndarray:
         "hibrido":    df["hibrido"].astype(float),
         "blindado":   df["blindado"].astype(float),
         "blanco":     df["blanco"].astype(float),
-        "sunroof":    df["sunroof"].astype(float),
     })
     return X.to_numpy(dtype=float)
 
@@ -346,7 +348,7 @@ def _ajustes(x: np.ndarray, b: np.ndarray) -> list[str]:
     etiquetas = {
         "XLI": "versión XLI (gama de entrada)", "SEG": "versión SEG (tope de gama)",
         "GR-S": "versión GR-S (deportiva)", "hibrido": "motor híbrido",
-        "blindado": "blindaje", "blanco": "color blanco", "sunroof": "sunroof",
+        "blindado": "blindaje", "blanco": "color blanco",
     }
     for i, nombre in enumerate(_FEATURES, start=1):
         contrib = x[i] * b[i]
