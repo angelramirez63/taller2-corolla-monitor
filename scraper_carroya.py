@@ -40,8 +40,8 @@ DATOS_COLS = [
     "id", "url",
     "marca", "linea", "año", "version",
     "precio", "moneda", "kilometraje", "transmision",
-    "color", "ciudad", "sunroof",
-    "vendedor_nombre", "vendedor_departamento",
+    "combustible", "color", "ciudad", "sunroof",
+    "vendedor_nombre", "vendedor_departamento", "comentarios",
     "estado", "fecha_descarga", "hora_descarga", "error"
 ]
 
@@ -213,7 +213,13 @@ async def extract_detail(page, url: str) -> dict:
 
     # Características
     transmision = await feature("TIPO DE CAJA")
+    combustible = await feature("COMBUSTIBLE")
     color       = await feature("COLOR")
+
+    # Comentarios libres del vendedor: suelen aclarar versión, motor o blindaje
+    comentarios = await txt(".comment")
+    if comentarios:
+        comentarios = re.sub(r"\s+", " ", comentarios)[:1000]
 
     # Sunroof: buscar en comentarios del vendedor y en el texto completo
     full_text = await page.evaluate("document.body.innerText")
@@ -258,11 +264,13 @@ async def extract_detail(page, url: str) -> dict:
         "moneda":                 moneda,
         "kilometraje":            km_raw,
         "transmision":            transmision,
+        "combustible":            combustible,
         "color":                  color,
         "ciudad":                 ciudad,
         "sunroof":                sunroof,
         "vendedor_nombre":        vendedor_nombre,
         "vendedor_departamento":  vendedor_dept,
+        "comentarios":            comentarios,
     }
 
 

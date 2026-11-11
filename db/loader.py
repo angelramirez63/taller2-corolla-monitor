@@ -127,10 +127,12 @@ def upsert_observacion(cur, anuncio_id: int, row: dict, run_date: date):
         INSERT INTO observacion
             (anuncio_id, fecha, hora, estado,
              version, precio, moneda, kilometraje,
-             transmision, color, sunroof, error)
+             transmision, combustible, color, sunroof,
+             comentarios, error)
         VALUES (%s, %s, %s, %s::estado_tipo,
                 %s, %s, %s, %s,
-                %s, %s, %s, %s)
+                %s, %s, %s, %s,
+                %s, %s)
         ON CONFLICT (anuncio_id, fecha) DO UPDATE SET
             hora        = EXCLUDED.hora,
             estado      = EXCLUDED.estado,
@@ -139,8 +141,10 @@ def upsert_observacion(cur, anuncio_id: int, row: dict, run_date: date):
             moneda      = EXCLUDED.moneda,
             kilometraje = EXCLUDED.kilometraje,
             transmision = EXCLUDED.transmision,
+            combustible = EXCLUDED.combustible,
             color       = EXCLUDED.color,
             sunroof     = EXCLUDED.sunroof,
+            comentarios = EXCLUDED.comentarios,
             error       = EXCLUDED.error
     """, (
         anuncio_id,
@@ -152,8 +156,10 @@ def upsert_observacion(cur, anuncio_id: int, row: dict, run_date: date):
         _str(row.get("moneda")),
         _int(row.get("kilometraje")),
         _str(row.get("transmision")),
+        _str(row.get("combustible")),
         _str(row.get("color")),
         _bool_sunroof(row.get("sunroof", "")),
+        _str(row.get("comentarios")),
         _str(row.get("error")),
     ))
 

@@ -4,8 +4,9 @@
 # Variables de entorno (contiene contraseñas)
 .env
 
-# CSVs generados por el scraper
+# CSVs generados por el scraper y reportes del análisis
 datos/*.csv
+reportes/
 
 # Python
 __pycache__/

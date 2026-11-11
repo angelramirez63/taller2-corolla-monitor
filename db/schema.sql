@@ -76,6 +76,10 @@ CREATE TABLE IF NOT EXISTS observacion (
     UNIQUE (anuncio_id, fecha)
 );
 
+-- Columnas agregadas para el análisis de gangas (punto 6)
+ALTER TABLE observacion ADD COLUMN IF NOT EXISTS combustible VARCHAR(50);
+ALTER TABLE observacion ADD COLUMN IF NOT EXISTS comentarios TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_obs_anuncio  ON observacion(anuncio_id);
 CREATE INDEX IF NOT EXISTS idx_obs_fecha    ON observacion(fecha DESC);
 CREATE INDEX IF NOT EXISTS idx_obs_precio   ON observacion(precio) WHERE precio IS NOT NULL;
