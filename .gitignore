@@ -4,9 +4,11 @@
 # Variables de entorno (contiene contraseñas)
 .env
 
-# CSVs generados por el scraper y reportes del análisis
+# CSVs generados por el scraper, reportes del análisis y copias de correos
 datos/*.csv
 reportes/
+correos/enviados/*
+!correos/enviados/.gitkeep
 
 # Python
 __pycache__/

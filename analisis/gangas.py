@@ -448,8 +448,9 @@ def graficar(dia: pd.DataFrame, gangas_ids: set, stats: dict, fecha: date, ruta:
 
     validos["precio_m"] = validos["precio"] / 1e6
     plt.rcParams.update({"font.family": ["Segoe UI", "DejaVu Sans"], "font.size": 9.5})
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.8),
-                                   gridspec_kw={"width_ratios": [1.05, 1]}, facecolor=C_SUPERFICIE)
+    # Paneles apilados: la gráfica se lee en el ancho de un correo (~650 px)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 9.2),
+                                   gridspec_kw={"height_ratios": [1, 1.05]}, facecolor=C_SUPERFICIE)
 
     for ax in (ax1, ax2):
         ax.set_facecolor(C_SUPERFICIE)
