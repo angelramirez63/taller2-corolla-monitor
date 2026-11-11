@@ -21,8 +21,8 @@ Método (resumen; el detalle está en README / documento de entrega):
      menciona, así que como variable mide la redacción del anuncio, no el carro.
   3. Referencia de cada anuncio: predicción leave-one-out (modelo entrenado sin
      ese anuncio), para que un precio atípico no se compare contra sí mismo.
-  4. Posible ganga: precio ≥ 15 % por debajo de la referencia Y residuo
-     ≤ -1.5 desviaciones robustas (MAD) del modelo.
+  4. Posible ganga: precio ≥ 10 % por debajo de la referencia Y residuo
+     ≤ -1 desviación robusta (MAD) del modelo.
 """
 
 from __future__ import annotations
@@ -51,8 +51,8 @@ REPORTES_DIR = BASE_DIR / "reportes"
 # ── Parámetros del método ─────────────────────────────────────────────────────
 PRECIO_MIN, PRECIO_MAX = 30_000_000, 300_000_000   # COP; fuera de rango = inválido
 KM_MAX                 = 400_000
-UMBRAL_PCT             = -0.15     # precio al menos 15 % bajo la referencia
-UMBRAL_Z               = -1.5      # y residuo ≤ -1.5 desviaciones robustas
+UMBRAL_PCT             = -0.10     # precio al menos 10 % bajo la referencia
+UMBRAL_Z               = -1.0      # y residuo ≤ -1 desviación robusta (descarta ruido si el modelo es impreciso)
 MIN_ENTRENAMIENTO      = 25        # anuncios mínimos para ajustar el modelo
 MIN_COMPARABLES        = 3         # anuncios de la misma versión (sin contar el propio)
 MIN_ATRIBUTO           = 2         # otros anuncios con el mismo atributo binario
@@ -482,14 +482,17 @@ def graficar(dia: pd.DataFrame, gangas_ids: set, stats: dict, fecha: date, ruta:
         orden.append("Sin identificar")
     etiqueta_v = validos["version_norm"].fillna("Sin identificar")
     rng = np.random.default_rng(7)
+    ganga_rotulada = False
     for i, v in enumerate(orden):
         g = validos[etiqueta_v == v]
         y = i + rng.uniform(-0.18, 0.18, len(g))
         es_g = g["anuncio_id"].isin(gangas_ids).to_numpy()
         ax2.scatter(g["precio_m"][~es_g], y[~es_g], s=38, color=C_SERIE, edgecolor=C_SUPERFICIE,
                     linewidth=1.5, zorder=3, label="Anuncio" if i == 0 else None)
+        rotular = es_g.any() and not ganga_rotulada
+        ganga_rotulada = ganga_rotulada or rotular
         ax2.scatter(g["precio_m"][es_g], y[es_g], s=70, color=C_GANGA, edgecolor=C_SUPERFICIE,
-                    linewidth=1.5, zorder=4, label="Posible ganga" if es_g.any() else None)
+                    linewidth=1.5, zorder=4, label="Posible ganga" if rotular else None)
         med = g["precio_m"].median()
         ax2.plot([med, med], [i - 0.3, i + 0.3], color=C_TINTA, linewidth=1.8, zorder=5)
     ax2.set_yticks(range(len(orden)))
