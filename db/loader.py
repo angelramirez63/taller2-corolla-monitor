@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
+from psycopg2 import sql
 
 from db.logger import RunLogger, db_size_mb
 
@@ -168,15 +169,17 @@ def insert_cambios(cur, anuncio_id: int, run_date: date, row: dict):
     """Compara con la observación anterior y registra diferencias."""
     for campo in CAMPOS_CAMBIO:
         valor_nuevo = _str(row.get(campo))
-        cur.execute("""
-            SELECT %s::text
+        # El nombre de columna va como identificador; como parámetro (%s) se leería
+        # el texto literal del nombre en vez del valor de la columna.
+        cur.execute(sql.SQL("""
+            SELECT {col}::text
             FROM observacion
             WHERE anuncio_id = %s
               AND fecha < %s
               AND estado = 'descargado'
             ORDER BY fecha DESC
             LIMIT 1
-        """, (campo, anuncio_id, run_date))
+        """).format(col=sql.Identifier(campo)), (anuncio_id, run_date))
         prev = cur.fetchone()
         if prev is None:
             continue

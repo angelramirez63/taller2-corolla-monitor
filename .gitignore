@@ -13,6 +13,11 @@ logs/
 pruebas/
 pruebas_archivo.log
 
+# Evidencias descargadas del servidor (contienen direcciones de correo)
+entregable/evidencias_servidor/
+entregable/*.tar.gz
+base_consolidada/
+
 # Python
 __pycache__/
 *.pyc
