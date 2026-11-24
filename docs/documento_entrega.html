@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Taller 2 · Monitor Toyota Corolla</title>
+<style>
+  @page { size: Letter; margin: 10mm 11mm 9mm 11mm; }
+  :root {
+    --tinta: #0b0b0b; --tinta2: #52514e; --muted: #898781; --borde: #e1e0d9;
+    --azul: #2a78d6; --azul-suave: #eef4fc; --naranja: #eb6834; --naranja-suave: #fdf1eb;
+    --gris-suave: #f4f4f1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--tinta);
+         font-size: 8.5pt; line-height: 1.32; background: #fff; }
+  header { display: flex; justify-content: space-between; align-items: flex-end;
+           border-bottom: 2px solid var(--tinta); padding-bottom: 3pt; margin-bottom: 5pt; }
+  h1 { font-size: 13.5pt; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--tinta2); font-size: 8.2pt; margin-top: 1pt; }
+  .autores { text-align: right; font-size: 8.2pt; color: var(--tinta2); flex-shrink: 0; margin-left: 10pt; }
+  .autores div { white-space: nowrap; }
+  .autores b { color: var(--tinta); }
+  h2 { font-size: 9.2pt; margin: 6pt 0 2.5pt; text-transform: uppercase; letter-spacing: .04em;
+       color: var(--azul); }
+  .diagrama { border: 1px solid var(--borde); border-radius: 4pt; padding: 3pt 4pt 1pt; }
+  svg { width: 100%; height: auto; display: block; }
+  .cols { display: grid; grid-template-columns: 1fr 1.18fr; gap: 0 12pt; }
+  p { margin: 0 0 3.2pt; }
+  ol, ul { margin: 0 0 3pt; padding-left: 12pt; }
+  li { margin-bottom: 2.6pt; }
+  b.t { color: var(--tinta); }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 7.6pt; background: var(--gris-suave);
+         padding: 0 2pt; border-radius: 2pt; }
+  table { border-collapse: collapse; width: 100%; font-size: 7.7pt; margin: 1pt 0 3pt; }
+  th, td { border-bottom: 1px solid var(--borde); padding: 1.6pt 3pt; text-align: left; vertical-align: top; }
+  th { color: var(--tinta2); font-weight: 600; }
+  .resultados { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4pt; margin: 2pt 0 4pt; }
+  .kpi { border: 1px solid var(--borde); border-radius: 3pt; padding: 2.5pt 4pt; }
+  .kpi .v { font-size: 12pt; font-weight: 700; }
+  .kpi .l { font-size: 7.2pt; color: var(--tinta2); line-height: 1.2; }
+  .nota { border-left: 3px solid var(--naranja); background: var(--naranja-suave); padding: 3pt 6pt;
+          font-size: 7.8pt; margin-top: 4pt; }
+  footer { margin-top: 4pt; font-size: 7.3pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Taller 2 — Monitor automático de Toyota Corolla en Carroya</h1>
+    <div class="sub">Clase de Python · Maestría, Universidad de los Andes · Modelos 2022–2026 · Periodo evaluado: 16–21 nov 2026<br>Repositorio: github.com/juanmario7/taller2-corolla-monitor</div>
+  </div>
+  <div class="autores"><div><b>Juan Mario Marengo</b> · j.marengo@uniandes.edu.co</div><div><b>Angel Ramirez</b> · ad.ramirezt1@uniandes.edu.co</div></div>
+</header>
+
+<h2>Arquitectura</h2>
+<div class="diagrama">
+<svg viewBox="0 0 1000 232" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#52514e"/>
+    </marker>
+  </defs>
+  <!-- contenedor VM -->
+  <rect x="114" y="6" width="766" height="220" rx="8" fill="#fbfbfa" stroke="#898781" stroke-dasharray="5 4"/>
+  <text x="868" y="24" text-anchor="end" font-size="10.5" fill="#52514e">VM Oracle Cloud (Bogotá) · Ubuntu 24.04 · PostgreSQL 16 · zona horaria America/Bogota</text>
+  <!-- carriles -->
+  <text x="128" y="31" font-size="11" font-weight="700" fill="#0b0b0b">8:00 · cron → pipeline.py recoleccion</text>
+  <text x="128" y="146" font-size="11" font-weight="700" fill="#0b0b0b">11:00 · cron → pipeline.py correo</text>
+
+  <!-- externos -->
+  <rect x="6" y="46" width="94" height="54" rx="6" fill="#ffffff" stroke="#898781" stroke-dasharray="4 3"/>
+  <text x="53" y="69" text-anchor="middle" font-size="11.5" font-weight="600">Carroya.com</text>
+  <text x="53" y="85" text-anchor="middle" font-size="9.5" fill="#52514e">búsqueda + fichas</text>
+  <rect x="896" y="158" width="98" height="54" rx="6" fill="#ffffff" stroke="#898781" stroke-dasharray="4 3"/>
+  <text x="945" y="181" text-anchor="middle" font-size="11.5" font-weight="600">Gmail SMTP</text>
+  <text x="945" y="197" text-anchor="middle" font-size="9.5" fill="#52514e">3 destinatarios</text>
+
+  <!-- módulos de código (azul) -->
+  <g font-size="11.5" font-weight="600" text-anchor="middle">
+    <rect x="128" y="46" width="102" height="54" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+    <text x="179" y="67">scraper</text>
+    <rect x="364" y="46" width="102" height="54" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+    <text x="415" y="67">loader.py</text>
+    <rect x="632" y="46" width="104" height="54" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+    <text x="684" y="67">gangas.py</text>
+    <rect x="364" y="158" width="102" height="54" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+    <text x="415" y="179">logger.py</text>
+    <rect x="632" y="158" width="104" height="54" rx="6" fill="#eef4fc" stroke="#2a78d6"/>
+    <text x="684" y="179">reporte.py</text>
+  </g>
+  <g font-size="9.5" fill="#52514e" text-anchor="middle">
+    <text x="179" y="83">Paso 1 · Playwright</text>
+    <text x="179" y="95">todas las páginas</text>
+    <text x="415" y="83">Paso 3 · upsert</text>
+    <text x="415" y="95">idempotente</text>
+    <text x="684" y="83">Paso 6 · regresión</text>
+    <text x="684" y="95">leave-one-out</text>
+    <text x="415" y="195">Paso 5 · cada etapa</text>
+    <text x="415" y="207">inicio, fin, métricas</text>
+    <text x="684" y="195">Paso 7 · HTML +</text>
+    <text x="684" y="207">gráfica + gangas</text>
+  </g>
+
+  <!-- datos (naranja) -->
+  <rect x="246" y="46" width="102" height="54" rx="6" fill="#fdf1eb" stroke="#eb6834"/>
+  <text x="297" y="67" text-anchor="middle" font-size="11.5" font-weight="600">datos/ CSV</text>
+  <text x="297" y="83" text-anchor="middle" font-size="9.5" fill="#52514e">links_ y datos_</text>
+  <text x="297" y="95" text-anchor="middle" font-size="9.5" fill="#52514e">uno por día</text>
+  <rect x="752" y="46" width="112" height="54" rx="6" fill="#fdf1eb" stroke="#eb6834"/>
+  <text x="808" y="67" text-anchor="middle" font-size="11.5" font-weight="600">reportes/</text>
+  <text x="808" y="83" text-anchor="middle" font-size="9.5" fill="#52514e">json · png · csv</text>
+  <text x="808" y="95" text-anchor="middle" font-size="9.5" fill="#52514e">por día</text>
+  <!-- base de datos (cilindro) -->
+  <path d="M482,52 v54 a67,9 0 0 0 134,0 v-54" fill="#fdf1eb" stroke="#eb6834"/>
+  <ellipse cx="549" cy="52" rx="67" ry="9" fill="#fdf1eb" stroke="#eb6834"/>
+  <text x="549" y="76" text-anchor="middle" font-size="11.5" font-weight="600">PostgreSQL</text>
+  <text x="549" y="91" text-anchor="middle" font-size="9" fill="#52514e">anuncio · observacion</text>
+  <text x="549" y="102" text-anchor="middle" font-size="9" fill="#52514e">cambio · log_ejecucion</text>
+
+  <!-- flechas -->
+  <g stroke="#52514e" stroke-width="1.4" fill="none" marker-end="url(#f)">
+    <path d="M100,73 H126" marker-start="url(#f)"/>
+    <path d="M230,73 H244"/>
+    <path d="M348,73 H362"/>
+    <path d="M466,73 H480"/>
+    <path d="M616,73 H630"/>
+    <path d="M736,73 H750"/>
+    <path d="M549,115 V185 H630"/>
+    <path d="M808,100 V136 H700 V156"/>
+    <path d="M466,185 H515 V117"/>
+    <path d="M736,185 H894"/>
+  </g>
+  <text x="520" y="150" font-size="9.5" fill="#52514e">log_ejecucion</text>
+  <text x="556" y="150" font-size="9.5" fill="#52514e" dx="40">lee log y análisis</text>
+  <text x="815" y="180" text-anchor="middle" font-size="9.5" fill="#52514e">envío diario</text>
+</svg>
+</div>
+
+<div class="cols">
+<div>
+<h2>Cómo funciona cada parte</h2>
+<ol>
+  <li><b class="t">Recolección (8:00).</b> <code>scraper_carroya.py</code> abre la búsqueda Corolla 2022–2026 con Playwright, hace scroll hasta cargar todos los anuncios de cada página y avanza por los botones de paginación. Filtra por marca, línea y año en la URL, entra a cada ficha y guarda <code>links_</code> y <code>datos_</code> del día con estado <i>sin intentar / descargado / fallido</i>, hora del intento y motivo del error. Los datos que no aparecen quedan vacíos.</li>
+  <li><b class="t">Consolidación.</b> <code>db/loader.py</code> recibe los dos archivos del día e inserta o actualiza vendedor, anuncio, una observación diaria por anuncio y los cambios de precio, km o versión; marca <i>no encontrado</i> a los anuncios previos ausentes en la búsqueda.</li>
+  <li><b class="t">Análisis.</b> <code>analisis/gangas.py</code> calcula la distribución del día (una observación por anuncio descargado con precio válido: n, cuartiles, mediana por versión), la gráfica y las posibles gangas con su explicación.</li>
+  <li><b class="t">Correo (11:00).</b> <code>correo/reporte.py</code> envía estado general, cifras, etapas, errores, gráfica y gangas nuevas; sale aunque falle una etapa y dice si algo seguía en curso. Guarda copia <code>.eml</code>.</li>
+  <li><b class="t">Logs.</b> Cada etapa escribe en <code>log_ejecucion</code> (día, etapa, inicio, fin, duración, estado, enlaces, descargas, nuevos, actualizados, no encontrados, únicos, tamaño de la base, estado del correo, errores) y en <code>logs/pipeline_AAAA-MM-DD.log</code>, todo en hora <code>America/Bogota</code> con desfase explícito.</li>
+</ol>
+<h2>Resultados del periodo</h2>
+<div class="resultados">
+  <div class="kpi"><div class="v">6/6</div><div class="l">días completos</div></div>
+  <div class="kpi"><div class="v">24/24</div><div class="l">etapas en estado ok</div></div>
+  <div class="kpi"><div class="v">344</div><div class="l">descargas, 0 fallidas</div></div>
+  <div class="kpi"><div class="v">64</div><div class="l">anuncios únicos</div></div>
+  <div class="kpi"><div class="v">7</div><div class="l">gangas nuevas</div></div>
+  <div class="kpi"><div class="v">6/6</div><div class="l">correos 11:00</div></div>
+</div>
+<p>Entre 53 y 61 enlaces por día; mediana del precio entre $105,9 M y $106,9 M (Q1 ≈ $95 M, Q3 ≈ $117 M); 32 observaciones <i>no encontrado</i>; ningún anuncio cambió de precio, km ni versión.</p>
+<div class="nota"><b>Incidencia corregida (23 nov).</b> La tabla <code>cambio</code> registraba cambios falsos: la consulta leía el nombre de la columna en vez de su valor. Se corrigió el loader y se recalculó la tabla desde el historial (0 cambios reales, verificado de forma independiente). No afectó observaciones, gangas ni correos. Se entregan la base original y la corregida.</div>
+</div>
+
+<div>
+<h2>Decisiones principales</h2>
+<p><b class="t">Identificación.</b> Un anuncio único es su URL completa, que contiene el código propio de Carroya (UUID) y no cambia si el vendedor edita el precio; <code>anuncio.url</code> es <code>UNIQUE</code>, así que volver a verlo actualiza el mismo registro. No se unifican vehículos publicados en anuncios distintos: Carroya oculta la placa y con ~60 Corollas casi idénticos habría falsos positivos.</p>
+<p><b class="t">Almacenamiento.</b> PostgreSQL con 5 tablas: <code>anuncio</code> (único, primera y última vista), <code>observacion</code> (una por anuncio y día), <code>cambio</code>, <code>vendedor</code> y <code>log_ejecucion</code>.</p>
+<table>
+  <tr><th></th><th>Ventaja</th><th>Desventaja</th></tr>
+  <tr><td><b>PostgreSQL</b></td><td>llaves únicas y <code>ON CONFLICT</code> evitan duplicados; consultas pedidas en SQL directo</td><td>requiere servidor y credenciales</td></tr>
+  <tr><td>CSV/Parquet</td><td>sin instalación, fácil de entregar</td><td>unicidad e idempotencia a mano; reescribir todo en cada carga</td></tr>
+  <tr><td>MongoDB</td><td>esquema flexible, historial anidado</td><td>uniones y "último estado" más incómodos; sin control de tipos</td></tr>
+</table>
+<p><b class="t">Actualización.</b> Upserts idempotentes: reprocesar un archivo deja la base igual. Se distinguen <i>descargado</i> (encontrado), <i>no encontrado</i> en una búsqueda completa (no implica venta) y <i>fallido</i> (disponibilidad desconocida por error).</p>
+<p><b class="t">Automatización.</b> VM en Oracle Cloud con <code>cron</code> en hora de Colombia: no depende de un computador personal, pero la VM debe estar encendida (créditos hasta el 12 dic) y <code>cron</code> no recupera una ejecución perdida. Cada etapa corre aparte con límite de tiempo. Pruebas completas del 11 al 15 nov marcadas <code>[PRUEBA]</code>; el 15 a las 23:00 se archivaron y la base se vació.</p>
+<p><b class="t">Detección de gangas.</b> Regresión ridge de log(precio) sobre año, log(km), versión (XLI/XEI/SEG/GR-S, normalizada desde la ficha o los comentarios), híbrido, blindaje y color blanco, entrenada con todos los anuncios únicos vistos. La <b>referencia</b> de cada carro se estima sin ese carro (leave-one-out). <b>Posible ganga:</b> precio ≥ 10 % bajo la referencia y residuo ≥ 1 desviación robusta (MAD). Sunroof y transmisión se excluyen (el sunroof viene de serie en el SEG y solo se detecta si se menciona; &gt;90 % es automático). Sin versión, km o precio válido (30–300 M COP), o con &lt; 3 comparables de la versión, no se evalúa y se informa el motivo. Cada alerta explica precio, referencia, rango típico y ajustes aplicados. <b>Limitaciones:</b> R² ≈ 0,44 con ~60 anuncios; no ve estado, peritaje ni tipo de vendedor; depende del texto del anuncio.</p>
+</div>
+</div>
+<footer>Detalle técnico, instrucciones de ejecución y consultas en README.md del repositorio. Todas las horas en America/Bogota (UTC−5).</footer>
+</body>
+</html>
