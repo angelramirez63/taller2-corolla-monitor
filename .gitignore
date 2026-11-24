@@ -16,6 +16,8 @@ pruebas_archivo.log
 # Evidencias descargadas del servidor (contienen direcciones de correo)
 entregable/evidencias_servidor/
 entregable/*.tar.gz
+entregable/Taller2_Corolla_Monitor/
+entregable/*.zip
 base_consolidada/
 
 # Python
